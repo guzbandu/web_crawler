@@ -57,17 +57,6 @@ public class LocalDataCollectorController {
         long totalLinks = 0;
         long totalTextSize = 0;
         int totalProcessedPages = 0;
-        for (Object localData : crawlersLocalData) {
-            CrawlStat stat = (CrawlStat) localData;
-            totalLinks += stat.getTotalLinks();
-            totalTextSize += stat.getTotalTextSize();
-            totalProcessedPages += stat.getTotalProcessedPages();
-        }
-
-        logger.info("Aggregated Statistics:");
-        logger.info("\tProcessed Pages: {}", totalProcessedPages);
-        logger.info("\tTotal Links found: {}", totalLinks);
-        logger.info("\tTotal Text Size: {}", totalTextSize);
         dbClient = new MongoClient(db_url, db_port);
         database = dbClient.getDatabase(db_name);
 		MongoCollection<Document> exists = database.getCollection(db_collection);
@@ -75,21 +64,33 @@ public class LocalDataCollectorController {
 			database.createCollection(db_collection, null);
 		}
 		collection = database.getCollection(db_collection);
+
+        Iterator<String> iter = LocalDataCollectorCrawler.myGraph.getGraph().vertexSet().iterator();
+        while(iter.hasNext()) {
+        	String vertex = iter.next();
+        	Document writeVertex = new Document("url", vertex);
+        	Document writeEdges = new Document("url", vertex);
+        	Set<DefaultEdge> edges = LocalDataCollectorCrawler.myGraph.getGraph().edgesOf(vertex);
+        	ArrayList<String> edgeTargets = new ArrayList<String>();
+        	for (DefaultEdge edge: edges) {
+        		String target = (String) LocalDataCollectorCrawler.myGraph.getGraph().getEdgeTarget(edge);
+        		edgeTargets.add(target);
+        	}
+        	writeEdges.append("edges", edgeTargets);
+        	collection.replaceOne(writeVertex, writeEdges, new UpdateOptions().upsert( true ));
+        }
 		
-		Iterator<String> iter = LocalDataCollectorCrawler.graph.vertexSet().iterator();
-		while(iter.hasNext()) {
-			String vertex = iter.next();
-			Document writeVertex = new Document("url", vertex);
-			Document writeEdges = new Document("url", vertex);
-			Set<DefaultEdge> edges = LocalDataCollectorCrawler.graph.edgesOf(vertex);
-    		ArrayList<String> edgeTargets = new ArrayList<String>();
-    		for (DefaultEdge edge: edges) {
-    			String target = (String) LocalDataCollectorCrawler.graph.getEdgeTarget(edge);
-    			edgeTargets.add(target);
-    		}
-			writeEdges.append("edges", edgeTargets);
-			collection.replaceOne(writeVertex, writeEdges, new UpdateOptions().upsert( true ));
-		}
+        for (Object localData : crawlersLocalData) {
+            CrawlStat stat = (CrawlStat) localData;
+            totalLinks += stat.getTotalLinks();
+            totalTextSize += stat.getTotalTextSize();
+            totalProcessedPages += stat.getTotalProcessedPages();
+            
+        }
+        logger.info("Aggregated Statistics:");
+        logger.info("\tProcessed Pages: {}", totalProcessedPages);
+        logger.info("\tTotal Links found: {}", totalLinks);
+        logger.info("\tTotal Text Size: {}", totalTextSize);
     }
 
 }

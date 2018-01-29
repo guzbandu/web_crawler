@@ -4,9 +4,6 @@ import java.io.UnsupportedEncodingException;
 import java.util.Set;
 import java.util.regex.Pattern;
 
-import org.jgrapht.Graph;
-import org.jgrapht.graph.DefaultDirectedGraph;
-import org.jgrapht.graph.DefaultEdge;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,7 +20,7 @@ public class LocalDataCollectorCrawler extends WebCrawler {
         "|rm|smil|wmv|swf|wma|zip|rar|gz))$");
 
     CrawlStat myCrawlStat;
-    public static Graph<String, DefaultEdge> graph = new DefaultDirectedGraph<String, DefaultEdge>(DefaultEdge.class);
+    public static GraphStruct myGraph = new GraphStruct();
 
     public LocalDataCollectorCrawler() {
         myCrawlStat = new CrawlStat();
@@ -44,11 +41,11 @@ public class LocalDataCollectorCrawler extends WebCrawler {
             HtmlParseData parseData = (HtmlParseData) page.getParseData();
             Set<WebURL> links = parseData.getOutgoingUrls();
             String currentPage = page.getWebURL().getURL();
-            graph.addVertex(currentPage);
+            myGraph.getGraph().addVertex(currentPage);
             for(WebURL link : links) {
             	String linkedpage = link.getURL();
-            	graph.addVertex(linkedpage);
-            	graph.addEdge(currentPage, linkedpage);
+            	myGraph.getGraph().addVertex(linkedpage);
+            	myGraph.getGraph().addEdge(currentPage, linkedpage);
             }
             myCrawlStat.incTotalLinks(links.size());
             try {
