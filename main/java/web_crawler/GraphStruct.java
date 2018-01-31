@@ -10,18 +10,26 @@ public class GraphStruct implements Serializable {
 	
 	private static final long serialVersionUID = 1L;
 	
-	private Graph<String, DefaultEdge> graph;
+	private Graph<Vertex, DefaultEdge> graph;	
 	
 	public GraphStruct() {
-		graph = new DefaultDirectedGraph<String, DefaultEdge>(DefaultEdge.class);
+		graph = new DefaultDirectedGraph<Vertex, DefaultEdge>(DefaultEdge.class);
 	}
 
-	public Graph<String, DefaultEdge> getGraph() {
+	public synchronized Graph<Vertex, DefaultEdge> getGraph() {
 		return graph;
 	}
 
-	public void setGraph(Graph<String, DefaultEdge> graph) {
+	public synchronized void setGraph(Graph<Vertex, DefaultEdge> graph) {
 		this.graph = graph;
+	}
+	
+	public synchronized void addEdge(Vertex w, Vertex x) {
+		this.graph.addEdge(w, x);
+	}
+	
+	public synchronized void addVertex(Vertex w) {
+		this.graph.addVertex(w);
 	}
 
 	public static long getSerialversionuid() {
